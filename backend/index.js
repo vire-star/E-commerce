@@ -3,6 +3,7 @@ import { ENV } from "./src/lib/env.js";
 import { connectDb } from "./src/lib/db.js";
 import cookieParser from "cookie-parser";
 import userRoute from "./src/routes/user.route.js";
+import productRoute from "./src/routes/product.route.js";
 
 
 const app  = express()
@@ -14,7 +15,11 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/",(req,res)=>{
     return res.status(201).json({message:"hi"})
 })
+app.get("/health", (req, res) => {
+  res.json({ ok: true });
+});
 app.use('/api',userRoute)
+app.use('/api/product', productRoute)
 app.listen(ENV.PORT,()=>{
     connectDb()
     console.log(`server started ${ENV.PORT}`)
