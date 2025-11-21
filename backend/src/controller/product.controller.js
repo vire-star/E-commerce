@@ -46,33 +46,41 @@ export const getAllProducts = async (req, res) => {
 
 
 
-
 export const getFeaturedProducts = async (req, res) => {
-	try {
-		let featuredProducts = await redis.get("featured_products");
-		if (featuredProducts) {
-			return res.json(JSON.parse(featuredProducts));
-		}
+  try {
+    // 1) Cache check
+    const cached = await redis.get("featured_products");
 
-		// if not in redis, fetch from mongodb
-		// .lean() is gonna return a plain javascript object instead of a mongodb document
-		// which is good for performance
-		featuredProducts = await Product.find({ isFeatured: true }).lean();
+    // console.log("featured cached =", cached, "type =", typeof cached);
 
-		if (!featuredProducts) {
-			return res.status(404).json({ message: "No featured products found" });
-		}
+    if (cached) {
+      // Upstash usually deserializes automatically to array/object
+      return res.status(200).json({ fromCache: true, products: cached });
+    }
 
-		// store in redis for future quick access
+    // 2) DB se lao
+    const featuredProducts = await Product.find({ isFeatured: true }).lean();
 
-		await redis.set("featured_products", JSON.stringify(featuredProducts));
+    if (!featuredProducts || featuredProducts.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No featured products found" });
+    }
 
-		res.json(featuredProducts);
-	} catch (error) {
-		console.log("Error in getFeaturedProducts controller", error.message);
-		res.status(500).json({ message: "Server error", error: error.message });
-	}
+    // 3) Redis me direct object/array store karo
+    await redis.set("featured_products", featuredProducts);
+
+    return res
+      .status(200)
+      .json({ fromCache: false, products: featuredProducts });
+  } catch (error) {
+    console.log("Error in getFeaturedProducts controller", error.message);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
 };
+
 
 export const createProduct = async (req, res) => {
   try {
