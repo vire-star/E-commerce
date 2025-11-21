@@ -68,15 +68,26 @@ export const login = async (req, res) => {
 			await storeToken(user._id, Token);
 			setCookies(res, Token);
 
-			res.json({
+			
+		} else {
+			return res.status(400).json({ message: "Invalid email or password" });
+		}
+
+
+		if(user.email==ENV.ADMIN_EMAIL){
+			return res.status(201).json({
+				message:"Welcome back admin",
+				owner:user.owner=true
+			})
+		}
+
+	return 	res.status(201).json({
 				_id: user._id,
 				name: user.name,
 				email: user.email,
 				role: user.role,
+				owner:user.owner
 			});
-		} else {
-			res.status(400).json({ message: "Invalid email or password" });
-		}
 	} catch (error) {
 		console.log("Error in login controller", error.message);
 		res.status(500).json({ message: error.message });
@@ -107,4 +118,36 @@ export const getProfile = async (req, res) => {
 	} catch (error) {
 		res.status(500).json({ message: "Server error", error: error.message });
 	}
+};
+
+
+// import User from "../models/user.model.js";
+
+export const updateUserRole = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body; // "admin" | "customer"
+
+    if (!["admin", "customer"].includes(role)) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.role = role;
+    const updatedUser = await user.save();
+
+    return res.json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+    });
+  } catch (error) {
+    console.log("Error in updateUserRole", error);
+    return res.status(500).json({ message: error.message });
+  }
 };
