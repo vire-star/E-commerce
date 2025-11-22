@@ -10,7 +10,7 @@ export const ProtectRoute = ({ children }) => {
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["getUser"],
     queryFn: getUserApi,
-   
+    retry: false,
   });
 
   // Debug

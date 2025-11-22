@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 const Navbar = () => {
 
   const {user} = useUserStore()
-  console.log(user)
+  // console.log(user?.name)
 const {mutate, isPending}=  useLogoutMutation()
   const logoutHandler =()=>{
     mutate()
@@ -21,9 +21,9 @@ const {mutate, isPending}=  useLogoutMutation()
         <h1>E-commerce</h1>
 
         <div className='flex items-center justify-center gap-6'>
-            <h1>Home</h1>
-            <h1>Products</h1>
-            <h1>Cart</h1>
+            <h1 className='cursor-pointer'>Home</h1>
+            <h1 className='cursor-pointer'>Products</h1>
+            <h1 className='cursor-pointer'>Cart</h1>
         </div>
 
         <div className='flex items-center justify-center gap-5'>
@@ -32,7 +32,7 @@ const {mutate, isPending}=  useLogoutMutation()
   <AvatarImage src="https://github.com/shadcn.png" />
   <AvatarFallback>CN</AvatarFallback>
 </Avatar>
-<span>Virendra</span>
+<span>{user?.name}</span>
           </div>
             <Button onClick={logoutHandler}>
                 {isPending?<Spinner/>:"Logout"}
