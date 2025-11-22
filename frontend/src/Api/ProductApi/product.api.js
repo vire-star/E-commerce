@@ -12,3 +12,17 @@ export const getFeaturedProductApi = async()=>{
     );
     return res.data
 }
+
+
+export const getAllProductsApi = async({ page = 1, limit = 20 })=>{
+    const res = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/product/getallProduct`,
+        {
+            headers:{'Content-Type':'application/json'},
+             params: { page, limit },
+             withCredentials:true
+        }
+    )
+    return res.data
+    
+}

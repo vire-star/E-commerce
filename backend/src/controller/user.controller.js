@@ -65,9 +65,17 @@ export const login =async(req,res)=>{
 			})
 		}
 
+		const token = await jwt.sign({userId : user._id},ENV.TOKEN_SECRET)
 
-		 const token = await jwt.sign({userId : user._id},ENV.TOKEN_SECRET)
-        return res.status(200).cookie("token", token, { maxAge: 1 * 24 * 60 * 60 * 1000, httpOnly: true, sameSite: 'strict' }).json({
+		if(user.email===ENV.ADMIN_EMAIL){
+			return res.status(201).json({
+				message:"Welcome Back Admin"
+			})
+		}
+
+		 res.cookie("token", token, { maxAge: 1 * 24 * 60 * 60 * 1000, httpOnly: true, sameSite: 'strict' })
+
+         res.status(200).json({
             message: `Welcome back ${user.name}`,
             user,
             success: true

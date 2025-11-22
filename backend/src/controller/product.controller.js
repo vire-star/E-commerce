@@ -6,36 +6,57 @@ import Product from "../models/product.model.js";
 
 export const getAllProducts = async (req, res) => {
   try {
-    // 1) Cache check
-    const cached = await redis.get("allProducts");
+    // query params: /products?page=1&limit=20
+    const page = parseInt(req.query.page ?? "1", 10);
+    const limit = parseInt(req.query.limit ?? "20", 10);
 
+    const skip = (page - 1) * limit;
+
+    // 1) Cache key per page
+    const cacheKey = `products:page:${page}:limit:${limit}`;
+
+    const cached = await redis.get(cacheKey);
     console.log("cached type =", typeof cached);
-    console.log("cached raw  =", cached);
 
     if (cached) {
-      // Agar Upstash ne already object return kiya (auto-deserialize), to parse ki zarurat nahi
       if (typeof cached === "object") {
-        return res.status(200).json({ fromCache: true, products: cached });
+        return res.status(200).json({ fromCache: true, ...cached });
       }
-
-      // Agar string hai, tabhi JSON.parse karo
       if (typeof cached === "string") {
-        const products = JSON.parse(cached);
-        return res.status(200).json({ fromCache: true, products });
+        const data = JSON.parse(cached);
+        return res.status(200).json({ fromCache: true, ...data });
       }
     }
 
-    // 2) DB se lao
-    const products = await Product.find({}).lean();
+    // 2) DB se current page ka data lao
+    const [items, total] = await Promise.all([
+      Product.find({})
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Product.countDocuments(),
+    ]);
 
-    if (!products || products.length === 0) {
+    if (!items || items.length === 0) {
       return res.status(404).json({ message: "No products found" });
     }
 
-    // 3) Redis me seedha object store karo (Upstash khud stringify karega)
-    await redis.set("allProducts", products);
+    const totalPages = Math.ceil(total / limit);
+    const hasMore = page < totalPages;
 
-    return res.status(200).json({ fromCache: false, products });
+    const payload = {
+      products: items,
+      page,
+      limit,
+      total,
+      totalPages,
+      hasMore,
+    };
+
+    // 3) Redis me page-wise cache
+    await redis.set(cacheKey, JSON.stringify(payload)); // ya direct object agar Upstash auto-serialize kare
+
+    return res.status(200).json({ fromCache: false, ...payload });
   } catch (error) {
     console.log("Error in getAllProducts controller", error);
     return res
@@ -43,6 +64,7 @@ export const getAllProducts = async (req, res) => {
       .json({ message: "Server error", error: error.message });
   }
 };
+
 
 
 

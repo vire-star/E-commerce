@@ -7,6 +7,7 @@ import { useLogoutMutation } from '@/hooks/User/user.hook';
 import { Spinner } from '../ui/spinner';
 import { useUserStore } from '@/Store/Store';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
 
@@ -17,13 +18,13 @@ const {mutate, isPending}=  useLogoutMutation()
     mutate()
   }
   return (
-    <div className='flex items-center justify-between p-5 '>
+    <div className='flex items-center justify-between h-[13vh] px-5 '>
         <h1>E-commerce</h1>
 
         <div className='flex items-center justify-center gap-6'>
-            <h1 className='cursor-pointer'>Home</h1>
-            <h1 className='cursor-pointer'>Products</h1>
-            <h1 className='cursor-pointer'>Cart</h1>
+           <Link className='cursor-pointer' to={'/'}>Home</Link>
+           <Link className='cursor-pointer' to={'/product'}>Product</Link>
+           <Link className='cursor-pointer' to={'/cart'}>Cart</Link>
         </div>
 
         <div className='flex items-center justify-center gap-5'>
