@@ -1,153 +1,115 @@
-// import Redis from "ioredis";
+import bcrypt from "bcryptjs";
+import { ENV } from "../lib/env.js";
+import User from "../models/user.model.js";
 import jwt from 'jsonwebtoken'
-import { redis } from '../lib/redis.js';
-import User from '../models/user.model.js';
-import { ENV } from '../lib/env.js';
-
-const generateTokens = (userId) => {
-	
-	const Token = jwt.sign({ userId }, ENV.TOKEN_SECRET, {
-		expiresIn: "7d",
-	});
-
-	return { Token };
-};
-
-const storeToken = async (userId, Token) => {
-	await redis.set(`refresh_token:${userId}`, Token,{expiresIn:1*24*60*60*1000}); // 7days
-};
-
-const setCookies = (res,  Token) => {
-	
-	res.cookie("Token", Token, {
-		httpOnly: true, // prevent XSS attacks, cross site scripting attack
-		// secure: process.env.NODE_ENV === "production",
-		sameSite: "strict", // prevents CSRF attack, cross-site request forgery attack
-		maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-	});
-};
-
-
-
-
-export const signup = async (req, res) => {
-	const { email, password, name } = req.body;
+export const Register =async(req , res)=>{
 	try {
-		const userExists = await User.findOne({ email });
+		
+		const {name, email, password}= req.body;
 
-		if (userExists) {
-			return res.status(400).json({ message: "User already exists" });
-		}
-		const user = await User.create({ name, email, password });
-
-		// authenticate
-		const { Token } = generateTokens(user._id);
-		await storeToken(user._id, Token);
-
-		setCookies(res, Token);
-
-		return res.status(201).json({
-			_id: user._id,
-			name: user.name,
-			email: user.email,
-			role: user.role,
-		});
-	} catch (error) {
-		console.log("Error in signup controller", error.message);
-		return res.status(500).json({ message: error.message });
-	}
-};
-
-export const login = async (req, res) => {
-	try {
-		const { email, password } = req.body;
-		const user = await User.findOne({ email });
-
-		if (user && (await user.comparePassword(password))) {
-			const { Token } = generateTokens(user._id);
-			await storeToken(user._id, Token);
-			setCookies(res, Token);
-
-			
-		} else {
-			return res.status(400).json({ message: "Invalid email or password" });
-		}
-
-
-		if(user.email==ENV.ADMIN_EMAIL){
-			return res.status(201).json({
-				message:"Welcome back admin",
-				owner:user.owner=true
+		if(!name || !email || !password){
+			return res.status(401).json({
+				message:"All Fields are required"
 			})
 		}
 
-	return 	res.status(201).json({
-				_id: user._id,
-				name: user.name,
-				email: user.email,
-				role: user.role,
-				owner:user.owner
-			});
-	} catch (error) {
-		console.log("Error in login controller", error.message);
-		res.status(500).json({ message: error.message });
-	}
-};
-
-export const logout = async (req, res) => {
-	try {
-		const refreshToken = req.cookies.Token;
-		if (refreshToken) {
-			const decoded = jwt.verify(refreshToken, ENV.TOKEN_SECRET);
-			await redis.del(`refresh_token:${decoded.userId}`);
+		const user = await User.findOne({email})
+		if(user){
+			return res.status(401).json({
+				message:"User already exist, try another email"
+			})
 		}
 
-		res.clearCookie("accessToken");
-		res.clearCookie("refreshToken");
-		res.json({ message: "Logged out successfully" });
+
+		const newUser = await User.create({
+			name,
+			email,
+			password
+		})
+
+		 const token = await jwt.sign({userId : newUser._id},ENV.TOKEN_SECRET)
+        return res.status(200).cookie("token", token, { maxAge: 1 * 24 * 60 * 60 * 1000, httpOnly: true, sameSite: 'strict' }).json({
+            message: `Welcome back ${user.name}`,
+            user,
+            success: true
+        })
 	} catch (error) {
-		console.log("Error in logout controller", error.message);
-		res.status(500).json({ message: "Server error", error: error.message });
+		console.log(`error from Register, ${error}`)
 	}
-};
+}
 
 
-export const getProfile = async (req, res) => {
+
+export const login =async(req,res)=>{
 	try {
-		res.json(req.user);
+		const {email, password} = req.body;
+		if(!email || !password){
+			return res.status(401).json({
+				message:"Please enter all the details"
+			})
+		}
+
+		const user =await User.findOne({email})
+
+		if(!user){
+			return res.status(201).json({
+				message:"Please check your credentials"
+			})
+		}
+
+		const isPasswordMatch = await bcrypt.compare(password, user.password)
+
+		if(!isPasswordMatch){
+			return res.status(401).json({
+				message:"Please check you credentials"
+			})
+		}
+
+
+		 const token = await jwt.sign({userId : user._id},ENV.TOKEN_SECRET)
+        return res.status(200).cookie("token", token, { maxAge: 1 * 24 * 60 * 60 * 1000, httpOnly: true, sameSite: 'strict' }).json({
+            message: `Welcome back ${user.name}`,
+            user,
+            success: true
+        })
+		
 	} catch (error) {
-		res.status(500).json({ message: "Server error", error: error.message });
+		console.log(`error from login backend ${error}`)
 	}
+}
+
+
+
+export const getUser = async (req, res) => {
+  try {
+    // req.user already full user object hai
+    const user = await User.findById(req.user._id).select("-password");
+
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({ user });
+  } catch (error) {
+    console.log(`error from getUser, ${error}`);
+    return res.status(500).json({ message: "Server error" });
+  }
 };
 
 
-// import User from "../models/user.model.js";
 
-export const updateUserRole = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { role } = req.body; // "admin" | "customer"
+export const logOut = async (req, res) => {
+ try {
+	        return res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,        // agar HTTPS hai (Render/Vercel to hamesha hota hai)
+    sameSite: "none",    // cross-site requests ke liye zaroori
+  }).status(201).json({
+	message:"LOgged out"
+  });
 
-    if (!["admin", "customer"].includes(role)) {
-      return res.status(400).json({ message: "Invalid role" });
-    }
-
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    user.role = role;
-    const updatedUser = await user.save();
-
-    return res.json({
-      _id: updatedUser._id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      role: updatedUser.role,
-    });
-  } catch (error) {
-    console.log("Error in updateUserRole", error);
-    return res.status(500).json({ message: error.message });
-  }
+  
+ } catch (error) {
+	console.log(`error from logout, ${error}`)
+ }
 };

@@ -4,14 +4,17 @@ import { ENV } from "../lib/env.js";
 
 export const protectRoute = async (req, res, next) => {
 	try {
-		const accessToken = req.cookies.Token;
+		const accessToken = req.cookies.token;
 
 		if (!accessToken) {
 			return res.status(401).json({ message: "Unauthorized - No access token provided" });
 		}
 
+		// console.log(accessToken)
+		
 		try {
 			const decoded = jwt.verify(accessToken, ENV.TOKEN_SECRET);
+			// console.log(decoded)
 			const user = await User.findById(decoded.userId).select("-password");
 
 			if (!user) {
