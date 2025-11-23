@@ -39,52 +39,60 @@ export const Register =async(req , res)=>{
 }
 
 
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(401).json({
+        message: "Please enter all the details",
+      });
+    }
 
-export const login =async(req,res)=>{
-	try {
-		const {email, password} = req.body;
-		if(!email || !password){
-			return res.status(401).json({
-				message:"Please enter all the details"
-			})
-		}
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({
+        message: "Please check your credentials",
+      });
+    }
 
-		const user =await User.findOne({email})
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
+      return res.status(401).json({
+        message: "Please check your credentials",
+      });
+    }
 
-		if(!user){
-			return res.status(201).json({
-				message:"Please check your credentials"
-			})
-		}
+    const token = await jwt.sign(
+      { userId: user._id },
+      ENV.TOKEN_SECRET,
+      { expiresIn: "1d" }
+    );
 
-		const isPasswordMatch = await bcrypt.compare(password, user.password)
+    // Admin bhi hai to bhi cookie set karo
+    const isAdmin = user.email === ENV.ADMIN_EMAIL;
 
-		if(!isPasswordMatch){
-			return res.status(401).json({
-				message:"Please check you credentials"
-			})
-		}
+    res
+      .cookie("token", token, {
+        maxAge: 1 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        sameSite: "strict",  // localhost pe strict/lax chalega
+        // secure: false       // HTTPS nahi hai to mat lagao
+      })
+      .status(200)
+      .json({
+        message: isAdmin ? "Welcome Back Admin" : `Welcome back ${user.name}`,
+        user,
+        isAdmin,
+        success: true,
+      });
+  } catch (error) {
+    console.log(`error from login backend ${error}`);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
 
-		const token = await jwt.sign({userId : user._id},ENV.TOKEN_SECRET)
-
-		if(user.email===ENV.ADMIN_EMAIL){
-			return res.status(201).json({
-				message:"Welcome Back Admin"
-			})
-		}
-
-		 res.cookie("token", token, { maxAge: 1 * 24 * 60 * 60 * 1000, httpOnly: true, sameSite: 'strict' })
-
-         res.status(200).json({
-            message: `Welcome back ${user.name}`,
-            user,
-            success: true
-        })
-		
-	} catch (error) {
-		console.log(`error from login backend ${error}`)
-	}
-}
 
 
 

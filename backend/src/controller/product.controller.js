@@ -6,35 +6,58 @@ import Product from "../models/product.model.js";
 
 export const getAllProducts = async (req, res) => {
   try {
-    // query params: /products?page=1&limit=20
+    // Pagination
     const page = parseInt(req.query.page ?? "1", 10);
     const limit = parseInt(req.query.limit ?? "20", 10);
-
     const skip = (page - 1) * limit;
 
-    // 1) Cache key per page
-    const cacheKey = `products:page:${page}:limit:${limit}`;
+    // Filters from query
+    const { search, category, minPrice, maxPrice } = req.query;
 
-    const cached = await redis.get(cacheKey);
-    console.log("cached type =", typeof cached);
+    // 1) Mongo query object banao
+    const mongoQuery = {};
 
-    if (cached) {
-      if (typeof cached === "object") {
-        return res.status(200).json({ fromCache: true, ...cached });
-      }
-      if (typeof cached === "string") {
-        const data = JSON.parse(cached);
-        return res.status(200).json({ fromCache: true, ...data });
-      }
+    // search: name / description par regex
+    if (search) {
+      mongoQuery.$or = [
+        { name:   { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
     }
 
-    // 2) DB se current page ka data lao
+    // category exact match
+    if (category) {
+      mongoQuery.category = category;
+    }
+
+    // price range
+    if (minPrice || maxPrice) {
+      mongoQuery.price = {};
+      if (minPrice) mongoQuery.price.$gte = Number(minPrice);
+      if (maxPrice) mongoQuery.price.$lte = Number(maxPrice);
+    }
+
+    // 2) Cache key: filters + page + limit
+    const cacheKey = `products:${JSON.stringify({
+      page,
+      limit,
+      search: search ?? "",
+      category: category ?? "",
+      minPrice: minPrice ?? "",
+      maxPrice: maxPrice ?? "",
+    })}`;
+
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      const data =
+        typeof cached === "string" ? JSON.parse(cached) : cached;
+      return res.status(200).json({ fromCache: true, ...data });
+    }
+
+    // 3) DB call with filters + pagination
     const [items, total] = await Promise.all([
-      Product.find({})
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      Product.countDocuments(),
+      Product.find(mongoQuery).skip(skip).limit(limit).lean(),
+      Product.countDocuments(mongoQuery),
     ]);
 
     if (!items || items.length === 0) {
@@ -53,8 +76,7 @@ export const getAllProducts = async (req, res) => {
       hasMore,
     };
 
-    // 3) Redis me page-wise cache
-    await redis.set(cacheKey, JSON.stringify(payload)); // ya direct object agar Upstash auto-serialize kare
+    await redis.set(cacheKey, JSON.stringify(payload));
 
     return res.status(200).json({ fromCache: false, ...payload });
   } catch (error) {
