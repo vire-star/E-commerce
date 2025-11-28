@@ -1,6 +1,6 @@
 import express from "express";
 import { adminRoute, protectRoute } from "../middleware/auth.middleware.js";
-import { createProduct, deleteProduct, getAllProducts, getFeaturedProducts, getProductsByCategory, getRecommendedProducts, toggleFeaturedProduct } from "../controller/product.controller.js";
+import { createProduct, deleteProduct, getAllProducts, getFeaturedProducts, getProductsByCategory, getRecommendedProducts, singleProduct, toggleFeaturedProduct } from "../controller/product.controller.js";
 import { upload } from "../middleware/upload.middleware.js";
 
 
@@ -12,6 +12,7 @@ productRoute.put("/toggleFeatureProduct/:id",protectRoute, adminRoute, toggleFea
 productRoute.get('/getFeaturedProduct', protectRoute, adminRoute, getFeaturedProducts)
 productRoute.get('/deleteProduct/:id', adminRoute, protectRoute, deleteProduct)
 productRoute.get('/getRecomendedProduct', protectRoute, getRecommendedProducts)
-productRoute.get('getProductByCateogry/:id', protectRoute, getProductsByCategory)
-productRoute.get('toggleFeatureProduct/:id',adminRoute, protectRoute, toggleFeaturedProduct)
+productRoute.get('/getProductByCateogry/:id', protectRoute, getProductsByCategory)
+productRoute.get('/toggleFeatureProduct/:id',adminRoute, protectRoute, toggleFeaturedProduct)
+productRoute.get('/singleProduct/:id', protectRoute, singleProduct)
 export default productRoute

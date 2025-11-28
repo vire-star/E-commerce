@@ -13,6 +13,21 @@ export const getFeaturedProductApi = async()=>{
     return res.data
 }
 
+export const getSingleProductApi = async(productId)=>{
+    const res = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/product/singleProduct/${productId}`,
+        
+       
+        {
+             headers:{'Content-Type':'application/json'},
+            withCredentials:true
+        }
+    );
+    return res.data
+}
+
+
+
 
 // product.api.ts
 

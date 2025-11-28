@@ -6,6 +6,8 @@ import userRoute from "./src/routes/user.route.js";
 import productRoute from "./src/routes/product.route.js";
 import cartRouter from "./src/routes/cart.route.js";
 import cors from 'cors'
+import searchRoute from "./src/routes/search.route.js";
+import paymentRoute from "./src/routes/payment.route.js";
 
 const app  = express()
 
@@ -28,6 +30,8 @@ app.get("/health", (req, res) => {
 app.use('/api',userRoute)
 app.use('/api/product', productRoute)
 app.use('/api/cart',cartRouter)
+app.use('/api/search',searchRoute)
+app.use('/api/payment',paymentRoute)
 app.listen(ENV.PORT,()=>{
     connectDb()
     console.log(`server started ${ENV.PORT}`)

@@ -7,6 +7,9 @@ import { Route, Routes } from 'react-router-dom'
 import { ProtectRoute } from './ProtectedRoutes'
 import Cart from '@/Pages/User/Cart'
 import Product from '@/Pages/User/Product'
+import SearchPage from '@/Pages/SearchPage'
+import SingleProduct from '@/Pages/User/SingleProduct'
+import Purchase from '@/Pages/User/Purchase'
 
 const MainRoutes = () => {
   return (
@@ -21,9 +24,24 @@ const MainRoutes = () => {
             <Product/>
           </ProtectRoute>
         } />
+        <Route path='/product/:id' element={
+          <ProtectRoute>
+            <SingleProduct/>
+          </ProtectRoute>
+        } />
         <Route path='/cart' element={
           <ProtectRoute>
             <Cart/>
+          </ProtectRoute>
+        } />
+        <Route path='/search' element={
+          <ProtectRoute>
+            <SearchPage/>
+          </ProtectRoute>
+        } />
+        <Route path='/purchase' element={
+          <ProtectRoute>
+            <Purchase/>
           </ProtectRoute>
         } />
         <Route path='/login' element={<Login/>}/>

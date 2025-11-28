@@ -1,12 +1,18 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import cloudinary from "../lib/cloudinary.js";
+import { ENV } from "../lib/env.js";
 import { redis } from "../lib/redis.js";
 // import cloudinary from "../lib/cloudinary.js";
 import Product from "../models/product.model.js";
 
 
+const genAI = new GoogleGenerativeAI(ENV.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+
 export const getAllProducts = async (req, res) => {
   try {
-    // Pagination
+    // Pagination variables
     const page = parseInt(req.query.page ?? "1", 10);
     const limit = parseInt(req.query.limit ?? "20", 10);
     const skip = (page - 1) * limit;
@@ -14,59 +20,103 @@ export const getAllProducts = async (req, res) => {
     // Filters from query
     const { search, category, minPrice, maxPrice } = req.query;
 
-    // 1) Mongo query object banao
+    // AI prompt
+    const prompt = `You are an intelligent assistant for an E-commerce platform. A user will type any query about what they want. Your task is to understand the intent and return most relevant keyword from the following list of categories:
+- Jeans
+- Pants
+- Shirt
+- Kids
+- Mens
+- Womens
+
+Only reply with one single keyword from the list above that best matches the query. Do not explain anything. No extra text. Query: "${search}"`;
+
+    // Variables for processed filters
+  let aiText = null;
+
+if (search && search.trim() !== "") {
+  const result = await model.generateContent(prompt);
+  aiText =
+    result?.response?.candidates?.[0]?.content?.parts?.[0]?.text
+      ?.trim()
+      .replace(/[`"\n]/g, "") || "";
+}
+
+    let aiCategory = category;
+
+   
+
+    console.log(search,"frontend ")
+    console.log(aiText,"Ai text")
+    // MongoDB query construction
     const mongoQuery = {};
 
-    // search: name / description par regex
-    if (search) {
+    if (aiText) {
       mongoQuery.$or = [
-        { name:   { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
+        { name: { $regex: aiText, $options: "i" } },
+        { description: { $regex: aiText, $options: "i" } },
+        // { description: { $regex: aiText, $options: "i" } },
       ];
     }
 
-    // category exact match
-    if (category) {
-      mongoQuery.category = category;
+    if (aiCategory) {
+      mongoQuery.category = aiCategory;
     }
 
-    // price range
     if (minPrice || maxPrice) {
       mongoQuery.price = {};
       if (minPrice) mongoQuery.price.$gte = Number(minPrice);
       if (maxPrice) mongoQuery.price.$lte = Number(maxPrice);
     }
 
-    // 2) Cache key: filters + page + limit
+    // Cache key based on filters and pagination
     const cacheKey = `products:${JSON.stringify({
       page,
       limit,
-      search: search ?? "",
-      category: category ?? "",
+      search: aiText ?? "",
+      category: aiCategory ?? "",
       minPrice: minPrice ?? "",
       maxPrice: maxPrice ?? "",
     })}`;
 
+    // Check cache
     const cached = await redis.get(cacheKey);
     if (cached) {
-      const data =
-        typeof cached === "string" ? JSON.parse(cached) : cached;
+      const data = typeof cached === "string" ? JSON.parse(cached) : cached;
       return res.status(200).json({ fromCache: true, ...data });
     }
 
-    // 3) DB call with filters + pagination
+    // Fetch from DB with pagination
     const [items, total] = await Promise.all([
       Product.find(mongoQuery).skip(skip).limit(limit).lean(),
       Product.countDocuments(mongoQuery),
     ]);
 
+    // Return 200 with empty result if no items found (better UX)
     if (!items || items.length === 0) {
-      return res.status(404).json({ message: "No products found" });
+      const emptyPayload = {
+        products: [],
+        page,
+        limit,
+        total: 0,
+        totalPages: 0,
+        hasMore: false,
+        appliedFilters: {
+          search: aiText,
+          category: aiCategory,
+          minPrice,
+          maxPrice,
+        },
+      };
+      await redis.set(cacheKey, JSON.stringify(emptyPayload));
+      return res.status(200).json({ fromCache: false, ...emptyPayload });
     }
 
+    // Calculate pagination metadata
     const totalPages = Math.ceil(total / limit);
     const hasMore = page < totalPages;
 
+    // Assemble payload
     const payload = {
       products: items,
       page,
@@ -74,19 +124,24 @@ export const getAllProducts = async (req, res) => {
       total,
       totalPages,
       hasMore,
+      appliedFilters: {
+        search: aiText,
+        category: aiCategory,
+        minPrice,
+        maxPrice,
+      },
     };
 
-    await redis.set(cacheKey, JSON.stringify(payload));
+    // Cache result for future requests
+    await redis.set(cacheKey, JSON.stringify(payload),{ ex: 6 });
 
+    // Return success response
     return res.status(200).json({ fromCache: false, ...payload });
   } catch (error) {
     console.log("Error in getAllProducts controller", error);
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
 
 
 
@@ -150,7 +205,12 @@ export const createProduct = async (req, res) => {
       category,
       image: imageUrl,
     });
-     await redis.del("allProducts");
+     const keys = await redis.keys("products:*");
+    if (keys.length > 0) {
+      await redis.del(keys);
+    }
+
+    
     return res.status(201).json(product);
   } catch (error) {
     console.log("Error in createProduct controller", error);
@@ -246,4 +306,23 @@ async function updateFeaturedProductsCache() {
 	} catch (error) {
 		console.log("error in update cache function");
 	}
+}
+
+
+
+export const singleProduct = async(req,res)=>{
+  try {
+    const productId = req.params.id
+    if(!productId){
+      return res.status(401).json({
+        message:"Please provide id"
+      })
+    }
+
+    const product = await Product.findById(productId)
+
+    return res.status(201).json(product)
+  } catch (error) {
+    console.log(`error from single Product`)
+  }
 }
