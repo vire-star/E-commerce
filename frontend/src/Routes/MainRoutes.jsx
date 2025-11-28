@@ -7,9 +7,14 @@ import { Route, Routes } from 'react-router-dom'
 import { ProtectRoute } from './ProtectedRoutes'
 import Cart from '@/Pages/User/Cart'
 import Product from '@/Pages/User/Product'
-import SearchPage from '@/Pages/SearchPage'
+
 import SingleProduct from '@/Pages/User/SingleProduct'
 import Purchase from '@/Pages/User/Purchase'
+import Dashboard from '@/Pages/Admin/Dashboard'
+import PurchaseSuccessPage from '@/Pages/User/Purchase'
+import DashboardProduct from '@/Pages/Admin/DashboardProduct'
+
+import DashboardAnalytic from '@/Pages/Admin/DashboardAnalytic'
 
 const MainRoutes = () => {
   return (
@@ -34,16 +39,18 @@ const MainRoutes = () => {
             <Cart/>
           </ProtectRoute>
         } />
-        <Route path='/search' element={
-          <ProtectRoute>
-            <SearchPage/>
-          </ProtectRoute>
-        } />
+        
         <Route path='/purchase' element={
           <ProtectRoute>
-            <Purchase/>
+            <PurchaseSuccessPage/>
           </ProtectRoute>
         } />
+        <Route path='/dashboard' element={<ProtectRoute><Dashboard/></ProtectRoute>}>
+        {/* Child routes - yahan path relative hai */}
+        <Route index element={<DashboardAnalytic />} /> {/* /dashboard pe default */}
+        <Route path='product' element={<DashboardProduct />} /> {/* /dashboard/product */}
+       
+      </Route>
         <Route path='/login' element={<Login/>}/>
         <Route path='/register' element={<Register/>}/>
     </Routes>

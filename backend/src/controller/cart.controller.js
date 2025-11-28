@@ -5,17 +5,22 @@ export const addToCart = async (req, res) => {
 		const { productId } = req.body;
 		const user = req.user;
 
-		const existingItem = user.cartItems.find((item) => item.id === productId);
+		const existingItem = user.cartItems.find(
+    (item) => item.product.toString() === productId
+);
 		if (existingItem) {
 			return res.status(201).json({
                 message:"Product is already in the cart"
             })
 		} else {
-			user.cartItems.push(productId);
+			user.cartItems.push({ quantity: 1, product: productId });
 		}
 
 		await user.save();
-		res.json(user.cartItems);
+		return res.json({
+			user:user.cartItems,
+			message:"Product added to cart"
+		});
 	} catch (error) {
 		console.log("Error in addToCart controller", error.message);
 		res.status(500).json({ message: "Server error", error: error.message });
@@ -29,12 +34,12 @@ export const getCartProducts = async (req, res) => {
 		const products = await Product.find({ _id: { $in: req.user.cartItems } });
 
 		// add quantity for each product
-		const cartItems = products.map((product) => {
+		const allCartItems = products.map((product) => {
 			const item = req.user.cartItems.find((cartItem) => cartItem.id === product.id);
 			return { ...product.toJSON(), quantity: item.quantity };
 		});
 
-		res.json(cartItems);
+		res.json(allCartItems);
 	} catch (error) {
 		console.log("Error in getCartProducts controller", error.message);
 		res.status(500).json({ message: "Server error", error: error.message });
@@ -65,7 +70,9 @@ export const updateProductQuantity = async (req, res) => {
     const { operation } = req.body;        // "increase" or "decrease"
     const user = req.user;
 
-    const item = user.cartItems.find((p) => p.id === productId);
+    const item = user.cartItems.find(
+    (item) => item.product.toString() === productId
+);
 
     // Agar product user cart me exist hi nahi karta
     if (!item) {

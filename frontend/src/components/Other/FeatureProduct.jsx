@@ -13,9 +13,9 @@ const FeatureProduct = () => {
   //  
   const {mutate} = useAddToCartMutation()
    const cartHandler=(productId)=>{
-    const payload ={productId}
-    console.log(data)
-    mutate(payload)
+    // const payload ={productId}
+    console.log({productId})
+    mutate({productId})
     
    }
 

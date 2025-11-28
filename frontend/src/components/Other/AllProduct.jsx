@@ -1,15 +1,9 @@
-import { useState } from "react";
-import { useProducts } from "@/hooks/Product/product.hook";
-import { useNavigate } from "react-router-dom";
+// src/components/Other/AllProduct.jsx
+import { useProducts } from '@/hooks/Product/product.hook';
+import { useNavigate } from 'react-router-dom';
 
-const AllProduct = () => {
-
-  const navigate=  useNavigate()
-  const [page, setPage] = useState(1);
-  const [searchInput, setSearchInput] = useState("");
-  const [category, setCategory] = useState("");
-  const [priceRange, setPriceRange] = useState({ min: "", max: "" });
-  const [activeSearch, setActiveSearch] = useState("");
+const AllProduct = ({ page, setPage, activeSearch, category, priceRange }) => {
+  const navigate = useNavigate();
 
   const { data, isLoading, isError } = useProducts({
     page,
@@ -20,160 +14,82 @@ const AllProduct = () => {
     maxPrice: priceRange.max,
   });
 
-
-  const cartItem = (data)=>{
-    // console.log(data)
-    navigate(`/product/${data}`)
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading products...</p>
+        </div>
+      </div>
+    );
   }
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    setPage(1);
-    setActiveSearch(searchInput);
-  };
 
-  const onCategoryChange = (e) => {
-    setPage(1);
-    setCategory(e.target.value);
-  };
+  if (isError) {
+    return (
+      <div className="flex-1 flex items-center justify-center h-96">
+        <p className="text-red-600">Something went wrong. Please try again.</p>
+      </div>
+    );
+  }
 
-  const onMinPriceChange = (e) => {
-    setPage(1);
-    setPriceRange((prev) => ({ ...prev, min: e.target.value }));
-  };
-
-  const onMaxPriceChange = (e) => {
-    setPage(1);
-    setPriceRange((prev) => ({ ...prev, max: e.target.value }));
-  };
-
-  const resetFilters = () => {
-    setSearchInput("");
-    setActiveSearch("");
-    setCategory("");
-    setPriceRange({ min: "", max: "" });
-    setPage(1);
-  };
-
-  if (isLoading) return <p>Loading...</p>;
-  if (isError) return <p>Something went wrong</p>;
-
-  // ✅ Check if products array is empty
   const hasProducts = data?.products && data.products.length > 0;
 
   return (
-    <div className="p-4">
-      {/* Filter UI */}
-      <div className="mb-4 flex flex-wrap items-end gap-4">
-        <form onSubmit={handleSearchSubmit} className="flex flex-col">
-          <label className="text-sm font-medium mb-1">Search</label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search products..."
-              className="border rounded px-2 py-1 w-64"
-            />
-            <button
-              type="submit"
-              className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600"
-            >
-              Search
-            </button>
-          </div>
-        </form>
-
-        <div className="flex flex-col">
-          <label className="text-sm font-medium mb-1">Category</label>
-          <select
-            value={category}
-            onChange={onCategoryChange}
-            className="border rounded px-2 py-1 w-48"
-          >
-            <option value="">All</option>
-            <option value="Men">Men</option>
-            <option value="women">Women</option>
-            <option value="kids">Kids</option>
-          </select>
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-sm font-medium mb-1">Min Price</label>
-          <input
-            type="number"
-            value={priceRange.min}
-            onChange={onMinPriceChange}
-            placeholder="0"
-            className="border rounded px-2 py-1 w-32"
-          />
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-sm font-medium mb-1">Max Price</label>
-          <input
-            type="number"
-            value={priceRange.max}
-            onChange={onMaxPriceChange}
-            placeholder="10000"
-            className="border rounded px-2 py-1 w-32"
-          />
-        </div>
-
-        <button
-          onClick={resetFilters}
-          className="border px-3 py-1 rounded text-sm hover:bg-gray-100"
-        >
-          Reset
-        </button>
-      </div>
-
-      {/* ✅ Empty state message */}
+    <div className="flex-1">
       {!hasProducts ? (
-        <div className="text-center py-10">
-          <p className="text-gray-500 text-lg">
-            {category || activeSearch || priceRange.min || priceRange.max
-              ? `No products found${category ? ` in "${category}" category` : ''}${activeSearch ? ` matching "${activeSearch}"` : ''}`
-              : "No products available"}
-          </p>
-          {(category || activeSearch || priceRange.min || priceRange.max) && (
-            <button
-              onClick={resetFilters}
-              className="mt-4 text-blue-500 underline"
-            >
-              Clear all filters
-            </button>
-          )}
+        <div className="text-center py-20 bg-white rounded-xl shadow-sm">
+          <p className="text-gray-500 text-lg mb-2">No products found</p>
+          <p className="text-gray-400 text-sm">Try adjusting your filters</p>
         </div>
       ) : (
         <>
-          {/* Products grid */}
-          <div className="grid grid-cols-4 gap-4">
-            {data.products.map((p) => (
-              <div onClick={()=>cartItem(p._id)} key={p._id} className="border p-2 rounded">
-                <h1 className="font-medium">{p.name}</h1>
-                <p className="text-sm text-gray-600">{p.price} Rs</p>
+          {/* Products Count */}
+          <div className="mb-4 text-sm text-gray-600">
+            Showing {data.products.length} of {data.total} products
+          </div>
+
+          {/* Products Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {data.products.map((product) => (
+              <div
+                key={product._id}
+                onClick={() => navigate(`/product/${product._id}`)}
+                className="bg-white border rounded-xl overflow-hidden hover:shadow-xl transition cursor-pointer"
+              >
+                <div className="aspect-square bg-gray-100">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="font-semibold text-lg mb-1 truncate">{product.name}</h3>
+                  <p className="text-blue-600 font-bold text-xl">₹{product.price}</p>
+                </div>
               </div>
             ))}
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center gap-4 mt-4">
+          <div className="flex items-center justify-center gap-4 mt-8 py-4">
             <button
               disabled={page === 1}
               onClick={() => setPage((prev) => prev - 1)}
-              className="border px-3 py-1 rounded disabled:opacity-50"
+              className="border border-gray-300 px-5 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 font-medium"
             >
-              Prev
+              Previous
             </button>
 
-            <span>
-              Page {data?.page} / {data?.totalPages || 1}
+            <span className="font-medium text-gray-700">
+              Page {data?.page} of {data?.totalPages || 1}
             </span>
 
             <button
               disabled={!data?.hasMore}
               onClick={() => setPage((prev) => prev + 1)}
-              className="border px-3 py-1 rounded disabled:opacity-50"
+              className="border border-gray-300 px-5 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 font-medium"
             >
               Next
             </button>

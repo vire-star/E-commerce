@@ -8,6 +8,7 @@ import cartRouter from "./src/routes/cart.route.js";
 import cors from 'cors'
 import searchRoute from "./src/routes/search.route.js";
 import paymentRoute from "./src/routes/payment.route.js";
+import analyticDataRoute from "./src/routes/getAnalyticData.route.js";
 
 const app  = express()
 
@@ -32,6 +33,7 @@ app.use('/api/product', productRoute)
 app.use('/api/cart',cartRouter)
 app.use('/api/search',searchRoute)
 app.use('/api/payment',paymentRoute)
+app.use('/api/analytic',analyticDataRoute)
 app.listen(ENV.PORT,()=>{
     connectDb()
     console.log(`server started ${ENV.PORT}`)

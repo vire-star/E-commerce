@@ -7,10 +7,14 @@ import { useLocation } from 'react-router-dom'
 const App = () => {
     const location = useLocation()
 
-  const hiddenRoutes  =['/register','/login']
+  const hiddenRoutes  =['/register','/login', '/dashboard']
+
+    const shouldHideNavbar = hiddenRoutes.some((route) =>
+    location.pathname.startsWith(route)
+  );
   return (
     <div>
-      {!hiddenRoutes.includes(location.pathname)&& <Navbar/>}
+       {!shouldHideNavbar && <Navbar />}
      <MainRoutes/>
     </div>
   )

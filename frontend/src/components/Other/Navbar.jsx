@@ -8,6 +8,7 @@ import { Spinner } from '../ui/spinner';
 import { useUserStore } from '@/Store/Store';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Link } from 'react-router-dom';
+import { ShoppingCart } from 'lucide-react';
 
 const Navbar = () => {
 
@@ -24,10 +25,13 @@ const {mutate, isPending}=  useLogoutMutation()
         <div className='flex items-center justify-center gap-6'>
            <Link className='cursor-pointer' to={'/'}>Home</Link>
            <Link className='cursor-pointer' to={'/product'}>Product</Link>
-           <Link className='cursor-pointer' to={'/cart'}>Cart</Link>
+           
         </div>
 
         <div className='flex items-center justify-center gap-5'>
+          <Link className='cursor-pointer' to={'/cart'}>
+           <ShoppingCart/>
+           </Link>
           <div className='flex items-center justify-center gap-3'>
             <Avatar>
   <AvatarImage src="https://github.com/shadcn.png" />

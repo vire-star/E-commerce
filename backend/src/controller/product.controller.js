@@ -133,7 +133,7 @@ if (search && search.trim() !== "") {
     };
 
     // Cache result for future requests
-    await redis.set(cacheKey, JSON.stringify(payload),{ ex: 6 });
+    await redis.set(cacheKey, JSON.stringify(payload),{ ex: 600 });
 
     // Return success response
     return res.status(200).json({ fromCache: false, ...payload });
@@ -148,15 +148,7 @@ if (search && search.trim() !== "") {
 export const getFeaturedProducts = async (req, res) => {
   try {
     // 1) Cache check
-    const cached = await redis.get("featured_products");
-
-    // console.log("featured cached =", cached, "type =", typeof cached);
-
-    if (cached) {
-      // Upstash usually deserializes automatically to array/object
-      return res.status(200).json({ fromCache: true, products: cached });
-    }
-
+   
     // 2) DB se lao
     const featuredProducts = await Product.find({ isFeatured: true }).lean();
 
@@ -167,7 +159,7 @@ export const getFeaturedProducts = async (req, res) => {
     }
 
     // 3) Redis me direct object/array store karo
-    await redis.set("featured_products", featuredProducts);
+    // await redis.set("featured_products", featuredProducts);
 
     return res
       .status(200)
@@ -280,33 +272,28 @@ export const getProductsByCategory = async (req, res) => {
 	}
 };
 
+
 export const toggleFeaturedProduct = async (req, res) => {
-	try {
-		const product = await Product.findById(req.params.id);
-		if (product) {
-			product.isFeatured = !product.isFeatured;
-			const updatedProduct = await product.save();
-			await updateFeaturedProductsCache();
-			res.json(updatedProduct);
-		} else {
-			res.status(404).json({ message: "Product not found" });
-		}
-	} catch (error) {
-		console.log("Error in toggleFeaturedProduct controller", error.message);
-		res.status(500).json({ message: "Server error", error: error.message });
-	}
+  try {
+    const product = await Product.findById(req.params.id);
+    if (product) {
+      product.isFeatured = !product.isFeatured;
+      await product.save();
+
+      const keys = await redis.keys("products:*");
+      if (keys.length > 0) {
+        await redis.del(...keys);
+      }
+
+      res.json(product);
+    } else {
+      res.status(404).json({ message: "Product not found" });
+    }
+  } catch (error) {
+    console.log("Error in toggleFeaturedProduct controller", error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
 };
-
-async function updateFeaturedProductsCache() {
-	try {
-		// The lean() method  is used to return plain JavaScript objects instead of full Mongoose documents. This can significantly improve performance
-
-		const featuredProducts = await Product.find({ isFeatured: true }).lean();
-		await redis.set("featured_products", JSON.stringify(featuredProducts));
-	} catch (error) {
-		console.log("error in update cache function");
-	}
-}
 
 
 

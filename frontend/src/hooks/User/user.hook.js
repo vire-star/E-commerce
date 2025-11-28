@@ -1,6 +1,6 @@
-import { loginApi, logoutApi, registerApi } from "@/Api/UserApi/user.api"
+import { getCartItemApi, loginApi, logoutApi, registerApi } from "@/Api/UserApi/user.api"
 import { useUserStore } from "@/Store/Store"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
@@ -58,3 +58,12 @@ export const useLogoutMutation = () => {
     },
   });
 };
+
+
+
+export const useUserCartItem =()=>{
+  return useQuery({
+    queryKey:['CartItem'],
+    queryFn:getCartItemApi
+  })
+}

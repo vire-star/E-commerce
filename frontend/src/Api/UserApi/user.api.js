@@ -46,3 +46,16 @@ export const logoutApi = async()=>{
     );
     return res.data
 }
+
+
+
+export const getCartItemApi = async()=>{
+    const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/cartItem`,
+        {
+           headers:{'Content-Type':'application/json'},
+            withCredentials:true
+        }
+    )
+
+    return res.data
+}
