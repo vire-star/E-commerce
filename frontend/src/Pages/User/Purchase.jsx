@@ -12,12 +12,7 @@ const PurchaseSuccessPage = () => {
 
 
   // ✅ FIRST: Check if page loads
-  console.log('🎯 Purchase page loaded!');
-  console.log('📝 Session ID:', sessionId);
-  useEffect(() => {
-    console.log('✅ Component mounted');
-    // Your API call here
-  }, []);
+  
   const navigate = useNavigate();
   const { mutate: confirmPayment, isLoading, isSuccess } = usePaymentHook();
   
