@@ -41,9 +41,9 @@ const MainRoutes = () => {
         } />
         
         <Route path='/purchase' element={
-          <ProtectRoute>
+          
             <PurchaseSuccessPage/>
-          </ProtectRoute>
+         
         } />
         <Route path='/dashboard' element={<ProtectRoute><Dashboard/></ProtectRoute>}>
         {/* Child routes - yahan path relative hai */}
