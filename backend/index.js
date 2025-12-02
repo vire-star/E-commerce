@@ -14,7 +14,7 @@ const app  = express()
 
 
 app.use(cors({
-    origin:ENV.CLIENT_URL,
+    origin:"https://e-commerce-wd6u.onrender.com",
     credentials:true
 }))
 app.use(express.json())
