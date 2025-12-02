@@ -29,7 +29,7 @@ export const Register =async(req , res)=>{
 		})
 
 		 const token = await jwt.sign({userId : newUser._id},ENV.TOKEN_SECRET)
-        return res.status(200).cookie("token", token, { maxAge: 1 * 24 * 60 * 60 * 1000, httpOnly: true, sameSite: 'None' }).json({
+        return res.status(200).cookie("token", token, { maxAge: 1 * 24 * 60 * 60 * 1000, httpOnly: true,  secure: true, sameSite: "none" }).json({
             message: `Welcome back ${user.name}`,
             user,
             success: true
@@ -76,7 +76,8 @@ export const login = async (req, res) => {
       .cookie("token", token, {
         maxAge: 1 * 24 * 60 * 60 * 1000,
         httpOnly: true,
-       sameSite: 'None'  // localhost pe strict/lax chalega
+        secure: true,
+  sameSite: "none",  // localhost pe strict/lax chalega
         // secure: false       // HTTPS nahi hai to mat lagao
       })
       .status(200)
