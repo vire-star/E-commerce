@@ -46,13 +46,7 @@ export const createCheckoutSession = async (req, res) => {
 			mode: "payment",
 			success_url: `${ENV.CLIENT_URL}/purchase?session_id={CHECKOUT_SESSION_ID}`,
 			cancel_url: `${ENV.CLIENT_URL}/purchase-cancel`,
-			discounts: coupon
-				? [
-						{
-							coupon: await createStripeCoupon(coupon.discountPercentage),
-						},
-				  ]
-				: [],
+			
 			metadata: {
 				userId: req.user._id.toString(),
 				couponCode: couponCode || "",
@@ -77,6 +71,7 @@ export const createCheckoutSession = async (req, res) => {
 };
 
 // backend/controller/payment.controller.js
+
 export const checkoutSuccess = async (req, res) => {
   try {
     const { sessionId } = req.body;
@@ -89,7 +84,7 @@ export const checkoutSuccess = async (req, res) => {
     const existingOrder = await Order.findOne({ stripeSessionId: sessionId });
 
     if (existingOrder) {
-      console.log("Order already exists for this session:", sessionId);
+     
       return res.status(200).json({
         success: true,
         message: "Order already created",
@@ -149,26 +144,5 @@ export const checkoutSuccess = async (req, res) => {
 };
 
 
-async function createStripeCoupon(discountPercentage) {
-	const coupon = await stripe.coupons.create({
-		percent_off: discountPercentage,
-		duration: "once",
-	});
 
-	return coupon.id;
-}
 
-async function createNewCoupon(userId) {
-	await Coupon.findOneAndDelete({ userId });
-
-	const newCoupon = new Coupon({
-		code: "GIFT" ,
-		discountPercentage: 10,
-		expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-		userId: userId,
-	});
-
-	await newCoupon.save();
-
-	return newCoupon;
-}

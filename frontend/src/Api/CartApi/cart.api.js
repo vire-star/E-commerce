@@ -27,3 +27,15 @@ export const updateCartQuantityApi = async ({ productId, operation }) => {
 
   return res.data;
 };
+export const deleteCartProductApi = async (productId) => {
+  const res = await axios.post(
+    `${import.meta.env.VITE_BASE_URL}/cart/deleteProduct`,
+     { productId },
+    {
+      headers: { "Content-Type": "application/json" },
+      withCredentials: true,
+    }
+  );
+
+  return res.data;
+};

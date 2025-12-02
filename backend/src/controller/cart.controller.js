@@ -1,4 +1,5 @@
 import Product from "../models/product.model.js";
+import User from "../models/user.model.js";
 
 export const addToCart = async (req, res) => {
 	try {
@@ -48,21 +49,44 @@ export const getCartProducts = async (req, res) => {
 
 
 
+// Remove specific item
 export const removeAllFromCart = async (req, res) => {
-	try {
-		const { productId } = req.body;
-		const user = req.user;
-		if (!productId) {
-			user.cartItems = [];
-		} else {
-			user.cartItems = user.cartItems.filter((item) => item.id !== productId);
-		}
-		await user.save();
-		res.json(user.cartItems);
-	} catch (error) {
-		res.status(500).json({ message: "Server error", error: error.message });
-	}
+    try {
+        const { productId } = req.body;
+        
+        if (!productId) {
+            return res.status(400).json({ message: "Product ID is required" });
+        }
+        
+        // ✅ Use 'product' field not 'id'
+        await req.user.updateOne({
+            $pull: { cartItems: { product: productId } }
+        });
+        
+        // ✅ Fetch updated cart
+        const updatedUser = await User.findById(req.user._id);
+        
+        res.json(updatedUser.cartItems);
+    } catch (error) {
+        console.log("Error:", error); // Debug log
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
 };
+
+// Remove all items
+export const clearCart = async (req, res) => {
+    try {
+        req.user.cartItems = [];
+        await req.user.save();
+        
+        res.json({ message: "Cart cleared successfully", cartItems: [] });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+
+
 
 export const updateProductQuantity = async (req, res) => {
   try {

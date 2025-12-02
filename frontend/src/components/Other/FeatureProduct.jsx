@@ -1,49 +1,95 @@
 import React from 'react'
-import {  useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { getFeaturedProductApi } from '@/Api/ProductApi/product.api'
 import { useAddToCartMutation } from '@/hooks/Cart/cart.hook'
+import { useNavigate } from 'react-router-dom'
+import { Spinner } from '@/components/ui/spinner'
 
 const FeatureProduct = () => {
-  const {data } = useQuery({
-    queryKey:['GetFeaturedProduct'],
-    queryFn:getFeaturedProductApi
+  const navigate = useNavigate()
+  
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['GetFeaturedProduct'],
+    queryFn: getFeaturedProductApi
   })
 
-  //  console.log(data?.products)
-  //  
-  const {mutate} = useAddToCartMutation()
-   const cartHandler=(productId)=>{
-    // const payload ={productId}
-    console.log({productId})
-    mutate({productId})
-    
-   }
+  const { mutate, isPending } = useAddToCartMutation()
+  
+  const cartHandler = (productId, e) => {
+    e.stopPropagation()
+    console.log({ productId })
+    mutate({ productId })
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Spinner />
+      </div>
+    )
+  }
+
+  if (isError || !data?.products?.length) {
+    return null
+  }
 
   return (
-    <div className='flex flex-col m-16 mt-16'>
-      <h1 className='text-center text-[5vw] font-medium tracking-tighter'>Featured Products</h1>
-     <div className='flex items-center justify-start mt-9'>
-       {
-        data?.products.map((item,index)=>{
-          return(
-            <div key={index} className='h-[52vh] w-[18vw] bg-yellow-400 p-2'>
-            <div className='w-full h-[80%] bg-red-600'>
-              <img src={item?.image} className='h-full w-full object-cover' alt="" />
+    <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16'>
+      {/* Section Header */}
+      <div className='text-center mb-12'>
+        <h2 className='text-4xl md:text-5xl font-bold text-gray-900 tracking-tight mb-2'>
+          Featured Products
+        </h2>
+        <p className='text-gray-600 text-sm'>Handpicked favorites just for you</p>
+      </div>
+
+      {/* Products Grid */}
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+        {data?.products.map((item) => (
+          <div 
+            key={item._id}
+            onClick={() => navigate(`/product/${item._id}`)}
+            className='bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-200 cursor-pointer group'
+          >
+            {/* Product Image */}
+            <div className='relative aspect-square bg-gray-50 overflow-hidden'>
+              <img 
+                src={item?.image} 
+                className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' 
+                alt={item.name} 
+              />
+              
+              {/* Featured Badge */}
+              <div className='absolute top-3 left-3'>
+                <span className='bg-black text-white text-xs font-semibold px-2.5 py-1 rounded'>
+                  Featured
+                </span>
+              </div>
             </div>
-            <div className='flex  items-start justify-between mt-3'>
-              <div>
-              <h1>{item.name}</h1>
-              <h1>{item.price} Rs.</h1>
+
+            {/* Product Details */}
+            <div className='p-4'>
+              <div className='mb-3'>
+                <h3 className='font-semibold text-base text-gray-900 mb-1 truncate group-hover:text-gray-700 transition-colors'>
+                  {item.name}
+                </h3>
+                <p className='text-gray-900 font-bold text-lg'>
+                  ₹{item.price}
+                </p>
+              </div>
+
+              {/* Add to Cart Button */}
+              <button
+                onClick={(e) => cartHandler(item._id, e)}
+                disabled={isPending}
+                className='w-full bg-black text-white py-2.5 px-4 rounded-md font-medium text-sm hover:bg-gray-800 transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center'
+              >
+                {isPending ? <Spinner /> : 'Add to Cart'}
+              </button>
             </div>
-            <div>
-             <h1 className='cursor-pointer' onClick={()=>cartHandler(item._id)}>Add to cart</h1>
-            </div>
-            </div>
-            </div>
-          )
-        })
-      }
-     </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

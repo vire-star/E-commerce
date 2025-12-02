@@ -1,5 +1,5 @@
 
-import { addToCartApi, updateCartQuantityApi } from '@/Api/CartApi/cart.api'
+import { addToCartApi, deleteCartProductApi, updateCartQuantityApi } from '@/Api/CartApi/cart.api'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner';
 export const useAddToCartMutation=()=>{
@@ -35,3 +35,16 @@ export const useUpdateQuantity = () => {
     },
   });
 };
+
+
+export const useDeleteProduct =()=>{
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn:deleteCartProductApi,
+    onSuccess:(data)=>{
+      console.log(data)
+      toast.success("product deleted from your cart")
+      queryClient.invalidateQueries(['getUser'])
+    }
+  })
+}
