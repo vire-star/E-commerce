@@ -40,11 +40,7 @@ const MainRoutes = () => {
           </ProtectRoute>
         } />
         
-        <Route path='/purchase' element={
-          
-            <PurchaseSuccessPage/>
-         
-        } />
+       <Route path="/purchase" element={<PurchaseSuccessPage />} />
         <Route path='/dashboard' element={<ProtectRoute><Dashboard/></ProtectRoute>}>
         {/* Child routes - yahan path relative hai */}
         <Route index element={<DashboardAnalytic />} /> {/* /dashboard pe default */}

@@ -6,10 +6,24 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 // import { usePaymentHook } from "@/hooks/usePayment";
 
 const PurchaseSuccessPage = () => {
+ 
   const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get('session_id');
+
+
+  // ✅ FIRST: Check if page loads
+  console.log('🎯 Purchase page loaded!');
+  console.log('📝 Session ID:', sessionId);
+  useEffect(() => {
+    console.log('✅ Component mounted');
+    // Your API call here
+  }, []);
   const navigate = useNavigate();
   const { mutate: confirmPayment, isLoading, isSuccess } = usePaymentHook();
   
+    console.log('🎯 Purchase page loaded!');
+  console.log('📝 Session ID:', sessionId);
+
   // ✅ YAHAN ADD KARO - Prevent duplicate API calls
 //   const hasCalledRef = useRef(false);
 
