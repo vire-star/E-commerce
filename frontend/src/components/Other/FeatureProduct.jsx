@@ -23,7 +23,7 @@ const FeatureProduct = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="flex h-screen w-screen items-center justify-center py-20">
         <Spinner />
       </div>
     )
