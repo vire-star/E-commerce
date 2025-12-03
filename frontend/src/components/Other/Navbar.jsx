@@ -26,7 +26,7 @@ const Navbar = () => {
       <div className='flex items-center justify-between h-16 px-6 max-w-7xl mx-auto'>
         {/* Logo */}
         <Link to='/' className='text-xl font-semibold text-gray-900 hover:text-gray-700 transition'>
-          E-commerce
+          E-Mart
         </Link>
 
         {/* Navigation Links */}
