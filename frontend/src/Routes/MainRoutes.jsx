@@ -42,7 +42,7 @@ const MainRoutes = () => {
         } />
         <Route path='/profile' element={
           <ProtectRoute>
-            <Profile/>
+            <Profile />
           </ProtectRoute>
         } />
         
