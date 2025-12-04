@@ -24,6 +24,11 @@ const userSchema = new mongoose.Schema(
 			default:false
 		},
 
+		profilePhoto:{
+			type:String
+		},
+		
+
 		cartItems: [
 			{
 				quantity: {

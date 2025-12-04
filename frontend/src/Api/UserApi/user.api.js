@@ -22,6 +22,17 @@ export const loginApi = async(payload)=>{
     );
     return res.data
 }
+export const updatApi = async(payload)=>{
+    const res = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/updateProfile`,
+        payload,
+        {
+             headers:{'Content-Type': 'multipart/form-data'},
+            withCredentials:true
+        }
+    );
+    return res.data
+}
 export const getUserApi = async()=>{
     const res = await axios.get(
         `${import.meta.env.VITE_BASE_URL}/getUser`,

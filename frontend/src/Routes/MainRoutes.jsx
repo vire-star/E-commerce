@@ -15,6 +15,7 @@ import PurchaseSuccessPage from '@/Pages/User/Purchase'
 import DashboardProduct from '@/Pages/Admin/DashboardProduct'
 
 import DashboardAnalytic from '@/Pages/Admin/DashboardAnalytic'
+import Profile from '@/Pages/User/Profile'
 
 const MainRoutes = () => {
   return (
@@ -37,6 +38,11 @@ const MainRoutes = () => {
         <Route path='/cart' element={
           <ProtectRoute>
             <Cart/>
+          </ProtectRoute>
+        } />
+        <Route path='/profile' element={
+          <ProtectRoute>
+            <Profile/>
           </ProtectRoute>
         } />
         

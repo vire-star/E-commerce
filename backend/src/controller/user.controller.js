@@ -3,6 +3,7 @@ import { ENV } from "../lib/env.js";
 import User from "../models/user.model.js";
 import jwt from 'jsonwebtoken'
 import Product from "../models/product.model.js";
+import cloudinary from "../lib/cloudinary.js";
 export const Register =async(req , res)=>{
 	try {
 		
@@ -163,113 +164,52 @@ export const getCartItem = async(req,res)=>{
 }
 
 
-// export const getCartItem = async (req, res) => {
-//   try {
-//     const user = await User.findById(req.user._id)
-//       .populate("cartItems.product");
-
-//     const cartItems = user.cartItems.map((item) => {
-//       if (!item.product) {
-//         return {
-//           _id: null,
-//           name: "Product removed",
-//           price: 0,
-//           quantity: item.quantity,
-//         };
-//       }
-
-//       return {
-//         ...item.product.toObject(),
-//         quantity: item.quantity
-//       };
-//     });
-
-//     res.json(cartItems);
-//   } catch (error) {
-//     console.log("Error in getCartItem:", error);
-//     res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// };
-
-
-
-// export const getCartItem = async (req, res) => {
-//   try {
-//     const cartItems = req.user.cartItems; // [{ product: ObjectId, quantity }]
-
-//     if (!cartItems || cartItems.length === 0) {
-//       return res.status(200).json([]);
-//     }
-
-//     // ✅ Step 1: Sirf product IDs nikalo
-//     const productIds = cartItems.map((item) => item.product);
-
-//     // ✅ Step 2: Un IDs se products fetch karo
-//     const products = await Product.find({ _id: { $in: productIds } }).lean();
-
-//     // ✅ Step 3: Har product ke saath quantity merge karo
-//     const result = products.map((product) => {
-//       const item = cartItems.find(
-//         (cartItem) => String(cartItem.product) === String(product._id)
-//       );
-//       return {
-//         ...product,
-//         quantity: item?.quantity || 1,
-//       };
-//     });
-
-//     return res.status(200).json(result);
-//   } catch (error) {
-//     console.log("Error in getCartItem:", error);
-//     return res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// };
-
-
-
-// export const getCartItem = async (req, res) => {
-//   try {
-//     const cartItems = req.user.cartItems;
-
-//     if (!cartItems || cartItems.length === 0) {
-//       return res.status(200).json([]);
-//     }
-
-//     // Step 1: Unique product IDs nikalo
-//     const productIds = [...new Set(cartItems.map((item) => String(item.product)))];
-
-//     console.log("Unique productIds >>>", productIds);
-
-//     // Step 2: Products fetch karo
-//     const products = await Product.find({ 
-//       _id: { $in: productIds } 
-//     }).lean();
-
-//     // Step 3: Duplicate products ki quantity add karo
-//     const result = products.map((product) => {
-//       // Same product ke saare cart items nikalo
-//       const matchingItems = cartItems.filter(
-//         (item) => String(item.product) === String(product._id)
-//       );
-
-//       // Unki quantity sum karo
-//       const totalQuantity = matchingItems.reduce(
-//         (sum, item) => sum + item.quantity, 
-//         0
-//       );
-
-//       return {
-//         ...product,
-//         quantity: totalQuantity, // 1 + 1 = 2
-//       };
-//     });
-
-//     console.log("Result with merged quantity >>>", result);
-
-//     return res.status(200).json(result);
-//   } catch (error) {
-//     console.log(`Error: ${error}`);
-//     return res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// };
-
+export const updateProfile = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { name } = req.body;
+        
+        const updateData = {};
+        
+        if (name) {
+            updateData.name = name;
+        }
+        
+        // Safe file check
+        if (req.file) {
+            const base64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+            
+            const uploadRes = await cloudinary.uploader.upload(base64, {
+                folder: "profilePhoto",
+            });
+            
+            updateData.profilePhoto = uploadRes.secure_url;
+        }
+        
+        const user = await User.findByIdAndUpdate(
+            userId,
+            updateData,
+            { new: true, runValidators: true }
+        ).select('-password');
+        
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+        
+        return res.status(200).json({
+            success: true,
+            message: "Profile updated successfully",
+            user
+        });
+        
+    } catch (error) {
+        console.error('Update Profile Error:', error);
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+}

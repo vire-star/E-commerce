@@ -1,4 +1,4 @@
-import { getCartItemApi, loginApi, logoutApi, registerApi } from "@/Api/UserApi/user.api"
+import { getCartItemApi, loginApi, logoutApi, registerApi, updatApi } from "@/Api/UserApi/user.api"
 import { useUserStore } from "@/Store/Store"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
@@ -12,6 +12,22 @@ export const useLoginMutation = ()=>{
             // console.log(data)
             toast.success(data?.message)
             navigate("/")
+        },
+
+        onError:(err)=>{
+            toast.error(err?.response?.data?.message)
+        }
+    })
+}
+export const useUpdateMutation = ()=>{
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn:updatApi,
+        onSuccess:(data)=>{
+            // console.log(data)
+            queryClient.invalidateQueries(['getUser'])
+            toast.success(data?.message)
+           
         },
 
         onError:(err)=>{
