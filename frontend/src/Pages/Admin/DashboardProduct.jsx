@@ -1,7 +1,7 @@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Spinner } from '@/components/ui/spinner';
-import { useProducts, useToggleProduct } from '@/hooks/Product/product.hook'
-import { EllipsisVertical, Search, Star, StarOff } from 'lucide-react';
+import { useDeleteProductFromDB, useProducts, useToggleProduct } from '@/hooks/Product/product.hook'
+import { DeleteIcon, EllipsisVertical, Search, Star, StarOff } from 'lucide-react';
 import React, { useState } from 'react'
 
 const DashboardProduct = () => {
@@ -25,6 +25,12 @@ const DashboardProduct = () => {
 
   const toggleProduct = (id) => {
     toggleFeature(id);
+  }
+
+  const {mutate:deleteSingleProduct, isPending}=useDeleteProductFromDB()
+  const deleteProduct = (id) => {
+    // Implement delete product functionality here
+    deleteSingleProduct(id)
   }
 
   if (isLoading) {
@@ -192,6 +198,10 @@ const DashboardProduct = () => {
                               Mark as Featured
                             </>
                           )}
+                        </button>
+                        <button onClick={()=>deleteProduct(item._id)} className='w-full text-left px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors flex items-center gap-2 disabled:opacity-50'>
+                         <DeleteIcon className='w-4 h-4'/>
+                          {isPending? 'Deleting...':'Delete Product'}
                         </button>
                       </PopoverContent>
                     </Popover>

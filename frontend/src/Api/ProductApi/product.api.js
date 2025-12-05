@@ -26,6 +26,20 @@ export const getSingleProductApi = async(productId)=>{
     return res.data
 }
 
+export const deleteSingleProductApi = async(productId)=>{
+    // ✅ CORRECT: axios.delete(url, config)
+    const res = await axios.delete(
+        `${import.meta.env.VITE_BASE_URL}/product/deleteProduct/${productId}`,
+        {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            withCredentials: true
+        }
+    );
+    return res.data;
+}
+
 
 
 

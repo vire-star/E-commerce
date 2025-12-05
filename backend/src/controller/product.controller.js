@@ -23,9 +23,9 @@ export const getAllProducts = async (req, res) => {
 - Jeans
 - Pants
 - Shirt
-- Kids
-- Mens
-- Womens
+- Jacket
+- Saree
+- Shoes
 
 Only reply with one single keyword from the list above that best matches the query. Do not explain anything. No extra text. Query: "${search}"`;
 
@@ -40,6 +40,7 @@ Only reply with one single keyword from the list above that best matches the que
           .replace(/[`"\n]/g, "") || "";
     }
 
+    console.log(search,"searched text from frontend")
     let aiCategory = category;
 
     // MongoDB query construction
@@ -53,6 +54,7 @@ Only reply with one single keyword from the list above that best matches the que
       ];
     }
 
+    console.log(aiText,"ai text")
     if (aiCategory) {
       mongoQuery.category = aiCategory;
     }
@@ -181,6 +183,7 @@ export const createProduct = async (req, res) => {
       });
 
       imageUrl = uploadRes.secure_url;
+      
     }
 
     const product = await Product.create({
@@ -188,13 +191,14 @@ export const createProduct = async (req, res) => {
       description,
       price,
       category,
-      image: imageUrl,
+      
+       image: imageUrl,
+  
     });
     const keys = await redis.keys("products:*");
     if (keys.length > 0) {
-      await redis.del(keys);
+      await redis.del(...keys); // ❌ Pehle: redis.del(keys)
     }
-
     return res.status(201).json(product);
   } catch (error) {
     console.log("Error in createProduct controller", error);
@@ -206,7 +210,8 @@ export const createProduct = async (req, res) => {
 
 export const deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const productId = req.params.id
+    const product = await Product.findById(productId);
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
@@ -222,9 +227,13 @@ export const deleteProduct = async (req, res) => {
       }
     }
 
-    c;
-
     await Product.findByIdAndDelete(req.params.id);
+    const keys = await redis.keys("products:*");
+    if (keys.length > 0) {
+      await redis.del(...keys);
+    }
+    
+
 
     res.json({ message: "Product deleted successfully" });
   } catch (error) {

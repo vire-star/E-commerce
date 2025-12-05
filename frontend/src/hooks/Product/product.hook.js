@@ -1,5 +1,5 @@
 // hooks/Product/useProducts.ts
-import { createCheckoutSessionApi, getAllProductsApi, getSingleProductApi, PaymentApi, toggleFeatureProductApi } from "@/Api/ProductApi/product.api";
+import { createCheckoutSessionApi, deleteSingleProductApi, getAllProductsApi, getSingleProductApi, PaymentApi, toggleFeatureProductApi } from "@/Api/ProductApi/product.api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 // import { getAllProductsApi } from "@/Api/ProductApi/product.api";
@@ -19,14 +19,17 @@ export const useProducts = (options) => {
 
 
 
-// export const getSingleProduct = (productId)=>{
-//   return useQuery({
-//     queryKey:['singleProduct', pro],
-//     queryFn:()=>getSingleProductApi(productId)
-//   })
-
-// }
-
+export const useDeleteProductFromDB=()=>{
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn:deleteSingleProductApi,
+    onSuccess:(data)=>{
+      queryClient.invalidateQueries(['products'])
+      toast.success("product deleted")
+      console.log(data)
+    }
+  })
+}
 
 
 export const useSingleProduct = (productId) => {
