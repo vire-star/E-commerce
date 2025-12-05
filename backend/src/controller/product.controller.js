@@ -40,7 +40,7 @@ Only reply with one single keyword from the list above that best matches the que
           .replace(/[`"\n]/g, "") || "";
     }
 
-    console.log(search,"searched text from frontend")
+   
     let aiCategory = category;
 
     // MongoDB query construction
@@ -54,7 +54,7 @@ Only reply with one single keyword from the list above that best matches the que
       ];
     }
 
-    console.log(aiText,"ai text")
+    
     if (aiCategory) {
       mongoQuery.category = aiCategory;
     }
