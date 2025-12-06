@@ -34,11 +34,10 @@ const FilterSection = ({
             className="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white cursor-pointer"
           >
             <option value="">All Categories</option>
-            <option value="Men">Men</option>
-            <option value="women">Women</option>
-            <option value="kids">Kids</option>
-            <option value="Jeans">Jeans</option>
-            <option value="Shirt">Shirt</option>
+           <option value="Mens">Men</option>        {/* ✅ Changed to "Mens" */}
+  <option value="Womens">Women</option>    {/* ✅ Changed to "Womens" */}
+  <option value="Kids">Kids</option>       {/* ✅ Already correct */}
+            
           </select>
         </div>
 

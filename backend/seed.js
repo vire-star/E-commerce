@@ -44,7 +44,7 @@ const seedDatabase = async () => {
     console.log('🗑️  Cleared existing products');
 
     // 1000 products generate
-    const products = generateProducts(1000);
+    const products = generateProducts(10000);
 
     // Bulk insert - fast and efficient
     await Product.insertMany(products);
