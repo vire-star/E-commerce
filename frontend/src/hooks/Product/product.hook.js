@@ -24,7 +24,7 @@ export const useDeleteProductFromDB=()=>{
   return useMutation({
     mutationFn:deleteSingleProductApi,
     onSuccess:(data)=>{
-      queryClient.invalidateQueries(['products'])
+      queryClient.invalidateQueries(['productsf'])
       toast.success("product deleted")
       console.log(data)
     }

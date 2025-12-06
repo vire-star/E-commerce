@@ -52,7 +52,9 @@ const FeatureProduct = () => {
             className='bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-200 cursor-pointer group'
           >
             {/* Product Image */}
-            <div className='relative aspect-square bg-gray-50 overflow-hidden'>
+           {
+            data? <>
+             <div className='relative aspect-square bg-gray-50 overflow-hidden'>
               <img 
                 src={item?.image} 
                 className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' 
@@ -87,6 +89,10 @@ const FeatureProduct = () => {
                 {isPending ? <Spinner /> : 'Add to Cart'}
               </button>
             </div>
+            </>:<>
+            <h1>No Featured Products Available</h1>
+            </>
+           }
           </div>
         ))}
       </div>
