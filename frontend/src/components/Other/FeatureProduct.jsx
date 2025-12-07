@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useQuery } from "@tanstack/react-query"
 import { getFeaturedProductApi } from '@/Api/ProductApi/product.api'
 import { useAddToCartMutation } from '@/hooks/Cart/cart.hook'
@@ -7,6 +7,7 @@ import { Spinner } from '@/components/ui/spinner'
 
 const FeatureProduct = () => {
   const navigate = useNavigate()
+  const [loadingProductId, setLoadingProductId] = useState(null) // ✅ Track which product is loading
   
   const { data, isLoading, isError } = useQuery({
     queryKey: ['GetFeaturedProduct'],
@@ -17,8 +18,16 @@ const FeatureProduct = () => {
   
   const cartHandler = (productId, e) => {
     e.stopPropagation()
-    console.log({ productId })
-    mutate({ productId })
+    setLoadingProductId(productId) // ✅ Set loading for this specific product
+    
+    mutate({ productId }, {
+      onSuccess: () => {
+        setLoadingProductId(null) // ✅ Clear loading after success
+      },
+      onError: () => {
+        setLoadingProductId(null) // ✅ Clear loading after error
+      }
+    })
   }
 
   if (isLoading) {
@@ -30,7 +39,11 @@ const FeatureProduct = () => {
   }
 
   if (isError || !data?.products?.length) {
-    return null
+    return (
+      <div className='max-w-7xl mx-auto px-4 py-16 text-center'>
+        <h2 className='text-2xl font-semibold text-gray-700'>No Featured Products Available</h2>
+      </div>
+    )
   }
 
   return (
@@ -52,9 +65,7 @@ const FeatureProduct = () => {
             className='bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-200 cursor-pointer group'
           >
             {/* Product Image */}
-           {
-            data? <>
-             <div className='relative aspect-square bg-gray-50 overflow-hidden'>
+            <div className='relative aspect-square bg-gray-50 overflow-hidden'>
               <img 
                 src={item?.image} 
                 className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' 
@@ -83,16 +94,13 @@ const FeatureProduct = () => {
               {/* Add to Cart Button */}
               <button
                 onClick={(e) => cartHandler(item._id, e)}
-                disabled={isPending}
+                disabled={loadingProductId === item._id} // ✅ Only disable this specific button
                 className='w-full bg-black text-white py-2.5 px-4 rounded-md font-medium text-sm hover:bg-gray-800 transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center'
               >
-                {isPending ? <Spinner /> : 'Add to Cart'}
+                {loadingProductId === item._id ? <Spinner /> : 'Add to Cart'} 
+                {/* ✅ Only show spinner for this product */}
               </button>
             </div>
-            </>:<>
-            <h1>No Featured Products Available</h1>
-            </>
-           }
           </div>
         ))}
       </div>
