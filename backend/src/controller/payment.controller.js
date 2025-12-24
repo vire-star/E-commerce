@@ -51,10 +51,10 @@ export const createCheckoutSession = async (req, res) => {
 				userId: req.user._id.toString(),
 				couponCode: couponCode || "",
 				products: JSON.stringify(
-				products.map((item) => ({
-                        id: item.product._id, // ✅ Nested access
-                        quantity: Number(item.quantity) || 1,
-                        price: item.product.price,
+			products.map((p) => ({
+						id: p._id,
+						quantity: p.quantity,
+						price: p.price,
                     }))
 				),
 			},
