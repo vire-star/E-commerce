@@ -39,15 +39,11 @@ export const ProtectRoute = ({ children }) => {
     )
   }
 
-  // 2) Agar 401 / unauthorized error aaya → login pe bhej do
-  if (isError && error?.response?.status === 401) {
-    return <Navigate to="/login" replace />;
+ if (isError || !data) {
+    console.error("Auth error:", error)
+    return <Navigate to="/login" replace />
   }
 
-  // 3) Agar data hi nahi mila (aur error bhi nahi) → safe side pe login
-  if (!data) {
-    return <Navigate to="/login" replace />;
-  }
 
   return children;
 };
