@@ -25,10 +25,9 @@ export const protectRoute = async (req, res, next) => {
 
 			next();
 		} catch (error) {
-			if (error.name === "TokenExpiredError") {
-				return res.status(401).json({ message: "Unauthorized - Access token expired" });
-			}
-			throw error;
+			 return res.status(401).json({
+      message: "Unauthorized: Invalid or expired token",
+    })
 		}
 	} catch (error) {
 		console.log("Error in protectRoute middleware", error.message);
